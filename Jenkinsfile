@@ -1,11 +1,11 @@
 #!groovy
-/********************************************************************************
-***** Description :: This template is used to setup Pipeline for LaunchStation 2*
-***** Author :: Ravindra Mittal ( ravindra.mittal@nagarro.com) ******************
-***** Modified by :: Shrey Sangal (shrey.sangal@nagarro.com) ********************
-***** Date        :: 09/26/2018                                  ****************
-***** Revision    :: 2.0                                       ******************
-********************************************************************************/
+
+/*********************************************************************
+***** Description :: This template is used to setup Pipeline *****
+* *** Author :: Ravindra Mittal ( ravindra.mittal@nagarro.com) *******
+***** Date        :: 08/23/2017                                  *****
+***** Revision    :: 1.0                                       *****
+**********************************************************************/  
 
 LABEL_EXPR='Linux_Slave'
 JAVA_HOME='JDK_1.8'
@@ -17,7 +17,7 @@ GIT_BRANCH=''
 COMMAND='install'
 SONAR_BRANCH='master'
 SONAR_URL='http://10.127.127.91:9000'
-DEFAULT_RECIPIENTS='shrey.sangal@nagarro.com'
+DEFAULT_RECIPIENTS='dsc.admin@nagarro.com'
 SVN_REPO='http://svn.nagarro.local:8080/svn/DevOps/codebase/sampleprojects/java/branches/launchstation_java_pipeline'
 SVN_CREDS_ID='dsc-admin'
 SCM='SVN'
@@ -26,7 +26,7 @@ TARGET='main'
 COMMENT='Pipeline has been successfully executed'
 ISSUE_ID='DEVOC-322'
 JIRA_SITE='jira-nagarro'
-SONAR_INTEGRATION ='sonar_linux_slave'
+SONAR_INTEGRATION ='sonar_linux_slave' 
 ARTIFACTORY_NAME='1508412728@1439723571527'
 ARTIFACTORY_REPO='CI-Automation-JAVA-Pipeline'
 BIND_PORT='8090:8080'
@@ -51,6 +51,12 @@ PERFORMANCE_FILENAME='index.html'
 PERFORMANCE_REPORTNAME='Performance report'
 PORT = '8090'
 
+def  funCodeCheckoutGit()
+{ 
+ echo  "\u2600 **********GIT Code Checkout Stage Begins*******"
+checkout([$class: 'GitSCM', branches: [[name: "*/"]], doGenerateSubmoduleConfigurations: false, extensions: [], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[credentialsId: "", url: "$GIT_URL"]]])
+} 
+
 def  funCodeCheckoutSvn()
 {
  echo  "\u2600 **********SVN Code Checkout Stage Begins*******"
@@ -64,37 +70,42 @@ sh "${MAVEN_HOME}/bin/mvn test"
 }
 
 def funCodeBuildMvn()
-{
- echo  "\u2600 **********Build started******************"
-sh "${MAVEN_HOME}/bin/mvn clean install"
+{ 
+ echo  "\u2600 **********Build started******************" 
+sh "${MAVEN_HOME}/bin/mvn install"
 stash includes: 'target/*.war', name: 'warfile'
+} 
+
+def funCodeBuildAnt()
+{
+ echo  "\u2600 **********Build started******************" 
+sh "${ANT_HOME}/bin/ant main" 
 }
 
 def funSonarAnalysisMVN()
-{
-	echo  "\u2600 **********Sonar analysis started*****************"
-	withSonarQubeEnv("sonar_linux_slave") 
-	{
-		sh "${MAVEN_HOME}/bin/mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.2:sonar"
+{ 
+ echo  "\u2600 **********Sonar analysis started*****************" 
+withSonarQubeEnv("sonar_linux_slave") {
+     sh "${MAVEN_HOME}/bin/mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.2:sonar"
     }
-}
+} 
 def funJiraIssueUpdate()
 {
-echo  "\u2600 **********JIRA ISSUE UPDATING*****************"
+echo  "\u2600 **********JIRA ISSUE UPDATING*****************" 
 jiraComment body: "Pipeline has been successfully executed", issueKey: "DEVOC-322"
 }
 
 def funartifactoryUpload()
 {
-	echo  "\u2600 **********Uploading to artifactory*****************"
-	def server = Artifactory.server '1508412728@1439723571527'
-    def buildInfo = Artifactory.newBuildInfo()
-    buildInfo.env.capture = true
-    buildInfo.env.collect()
-    def rtMaven = Artifactory.newMavenBuild()
-    rtMaven.tool = 'Maven3.2.1'
-    rtMaven.deployer releaseRepo:'CI-Automation-JAVA-Pipeline', snapshotRepo:'CI-Automation-JAVA-Pipeline', server: server
-	rtMaven.run pom: 'pom.xml', goals: 'clean install', buildInfo: buildInfo
+echo  "\u2600 **********Uploading to artifactory*****************" 
+def server = Artifactory.server '1508412728@1439723571527'
+     def buildInfo = Artifactory.newBuildInfo()
+      buildInfo.env.capture = true
+      buildInfo.env.collect()
+      def rtMaven = Artifactory.newMavenBuild()
+      rtMaven.tool = 'Maven3.2.1'
+      rtMaven.deployer releaseRepo:'CI-Automation-JAVA-Pipeline', snapshotRepo:'CI-Automation-JAVA-Pipeline', server: server
+    rtMaven.run pom: 'pom.xml', goals: 'clean install', buildInfo: buildInfo
     buildInfo.retention maxBuilds: 10, maxDays: 7, deleteBuildArtifacts: true
 	server.publishBuildInfo buildInfo
 	sh 'sshpass -p "Ggn@12345" ssh root@10.127.126.113 mkdir -p $JENKINS_HOME/workspace/$JOB_NAME'
@@ -133,7 +144,7 @@ def fundockercontRun()
 def funseleniumTest()
 {
 	echo  "\u2600 **********SELENIUM TESTING*****************"
-	sh "${MAVEN_HOME}/bin/mvn -f DemoSampleApp_selenium/pom.xml -DskipTests=true -Dhostname=10.127.126.113 -Dport=12001 -Dcontext=devopssampleapplication -Dmaven.test.failure.ignore=$PERFORMANCE_MAVEN_TEST_RESULT test"
+	sh "${MAVEN_HOME}/bin/mvn -f DemoSampleApp_selenium/pom.xml -Dhostname=10.127.126.113  -Dport=8090 -Dcontext=devopssampleapplication -Dmaven.test.failure.ignore=$PERFORMANCE_MAVEN_TEST_RESULT test"
 	publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: "DemoSampleApp_selenium/target/surefire-reports", reportFiles: "emailable-report.html", reportName: "Selenium Report", reportTitles: ''])
 }
 def funperformanceTest() 
