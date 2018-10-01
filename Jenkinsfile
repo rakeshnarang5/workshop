@@ -97,6 +97,7 @@ def funartifactoryUpload()
 	rtMaven.run pom: 'pom.xml', goals: 'clean install', buildInfo: buildInfo
     buildInfo.retention maxBuilds: 10, maxDays: 7, deleteBuildArtifacts: true
 	server.publishBuildInfo buildInfo
+	sh 'sshpass -p "Ggn@12345" ssh root@10.127.126.113 mkdir -p $JENKINS_HOME/workspace/$JOB_NAME'
 	sh 'sshpass -p "Ggn@12345"  scp -r *ock* root@10.127.126.113:$JENKINS_HOME/workspace/$JOB_NAME/'
 }
 def funDockerCreateImage()
