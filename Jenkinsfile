@@ -250,6 +250,6 @@ node("Linux_Slave")
         currentBuild.result = 'FAILURE'
         throw any //rethrow exception to prevent the build from proceeding
     } finally {
-        emailext body: '${JELLY_SCRIPT,template="health"}', mimeType: 'text/html', recipientProviders: [[$class: 'RequesterRecipientProvider']], replyTo: 'shrey.sangal@nagarro.com', subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!', to: 'shrey.sangal@nagarro.com'
+        emailext body: '${JELLY_SCRIPT,template="health"}', mimeType: 'text/html', recipientProviders: [[$class: 'RequesterRecipientProvider']], replyTo: 'vipin.choudhary@nagarro.com', subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!', to: 'vipin.choudhary@nagarro.com'
     }
 }
