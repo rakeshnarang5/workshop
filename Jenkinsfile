@@ -1,6 +1,6 @@
 #!groovy
 /********************************************************************************
-***** Description :: This template is used to setup Pipeline for Stanelybet *****
+***** Description :: This template is used to setup Pipeline for LaunchStation 2*
 ***** Author :: Ravindra Mittal ( ravindra.mittal@nagarro.com) ******************
 ***** Modified by :: Shrey Sangal (shrey.sangal@nagarro.com) ********************
 ***** Date        :: 09/26/2018                                  ****************
@@ -18,7 +18,7 @@ COMMAND='install'
 SONAR_BRANCH='master'
 SONAR_URL='http://10.127.127.91:9000'
 DEFAULT_RECIPIENTS='shrey.sangal@nagarro.com'
-SVN_REPO='http://svn.nagarro.local:8080/svn/DevOps/codebase/sampleprojects/java/branches/Stanelybet'
+SVN_REPO='http://svn.nagarro.local:8080/svn/DevOps/codebase/sampleprojects/java/branches/launchstation_java_pipeline'
 SVN_CREDS_ID='dsc-admin'
 SCM='SVN'
 BUILDTOOL='MVN'
@@ -54,7 +54,7 @@ PORT = '8090'
 def  funCodeCheckoutSvn()
 {
  echo  "\u2600 **********SVN Code Checkout Stage Begins*******"
-checkout([$class: 'SubversionSCM', additionalCredentials: [], excludedCommitMessages: '', excludedRegions: '', excludedRevprop: '', excludedUsers: '', filterChangelog: false, ignoreDirPropChanges: false, includedRegions: '', locations: [[credentialsId: "dsc-admin", depthOption: 'infinity', ignoreExternalsOption: true, local: '.', remote: "http://svn.nagarro.local:8080/svn/DevOps/codebase/sampleprojects/java/branches/Stanelybet"]], workspaceUpdater: [$class: 'UpdateUpdater']])
+checkout([$class: 'SubversionSCM', additionalCredentials: [], excludedCommitMessages: '', excludedRegions: '', excludedRevprop: '', excludedUsers: '', filterChangelog: false, ignoreDirPropChanges: false, includedRegions: '', locations: [[credentialsId: "dsc-admin", depthOption: 'infinity', ignoreExternalsOption: true, local: '.', remote: "http://svn.nagarro.local:8080/svn/DevOps/codebase/sampleprojects/java/branches/launchstation_java_pipeline"]], workspaceUpdater: [$class: 'UpdateUpdater']])
 }
 
 def fununitTestMvn()
