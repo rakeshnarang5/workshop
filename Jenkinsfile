@@ -170,7 +170,7 @@ def funReleaseEnv()
 {
 	echo  "\u2600 **********DEPLOY RELEASE ENVIRONMENT*****************"
 	sh 'sshpass -p "Ggn@12345" ssh root@10.127.126.48 rm -rf /tmp/devopssampleapplication.war'
-	sh 'sshpass -p "Ggn@12345l" scp $JENKINS_HOME/workspace/$JOB_NAME/target/*.war root@10.127.126.48:/tmp/'
+	sh 'sshpass -p "Ggn@12345" scp $JENKINS_HOME/workspace/$JOB_NAME/target/*.war root@10.127.126.48:/tmp/'
     sh 'sshpass -p "Ggn@12345" ssh root@10.127.126.48 bash -x /opt/deployment-scripts/AutomateDeploy.sh --application_type=tomcat'
 	echo "\u2600 ACCESS RELEASE ENVIRONMENT HERE: http://10.127.126.48:12002/demosampleapplication/ "
 }
