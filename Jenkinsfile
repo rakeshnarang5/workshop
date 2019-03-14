@@ -16,7 +16,7 @@ GIT_REPO=''
 GIT_BRANCH=''
 COMMAND='install'
 SONAR_BRANCH='master'
-SONAR_URL='http://10.127.127.91:9000'
+SONAR_URL='http://10.127.127.32:9000'
 DEFAULT_RECIPIENTS='dsc.admin@nagarro.com'
 SVN_REPO='http://svn.nagarro.local:8080/svn/DevOps/codebase/sampleprojects/java/branches/launchstation_java_pipeline'
 SVN_CREDS_ID='dsc-admin'
@@ -116,6 +116,12 @@ def funDockerCreateImage()
 		echo  "\u2600 **********CREATE DOCKER IMAGE*****************"
 		sh returnStdout: true, script: '/bin/docker build -t dtr.nagarro.com:443/devopssampleapplication:${BUILD_NUMBER} -f $JENKINS_HOME/workspace/$JOB_NAME/Dockerfile .'
 }
+ 
+def funDockerComplianceCheck()
+{
+	sh "cd $JENKINS_HOME/docker-bench-security && sh docker_complaince.sh tomcat:latest"
+} 
+
 def funDockerPushImage()
 {
 	echo  "\u2600 **********PUSH DOCKER IMAGE to DTR*****************"
