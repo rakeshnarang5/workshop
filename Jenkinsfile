@@ -238,10 +238,10 @@ node("Linux_Slave")
 		funseleniumTest()
 		stage 'Performance Testing  using Jmeter'
 		funperformanceTest()
-		stage 'Release Deployment'
-		funReleaseEnv()
-		stage 'Setup Application Monitoring'
-		funSetupELK()
+		//stage 'Release Deployment'
+		//funReleaseEnv()
+		//stage 'Setup Application Monitoring'
+		//funSetupELK()
         stage 'JIRA UPDATION'
         funJiraIssueUpdate()
 	}
