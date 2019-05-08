@@ -196,7 +196,7 @@ node("Linux_Slave")
 		{
 			funCodeBuildMvn()
 		}
-		stage 'Únit Test'
+		stage 'Unit Test'
 		if (BUILDTOOL == 'MVN')
 		{
 			fununitTestMvn()
