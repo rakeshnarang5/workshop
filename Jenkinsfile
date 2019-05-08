@@ -108,14 +108,14 @@ def server = Artifactory.server '1508412728@1439723571527'
     rtMaven.run pom: 'pom.xml', goals: 'clean install', buildInfo: buildInfo
     buildInfo.retention maxBuilds: 10, maxDays: 7, deleteBuildArtifacts: true
 	server.publishBuildInfo buildInfo
-	sh 'sshpass -p "Ggn@12345" ssh root@10.127.127.160 mkdir -p $JENKINS_HOME/workspace/$JOB_NAME'
-	sh 'sshpass -p "Ggn@12345"  scp -r *ock* root@10.127.127.160:$JENKINS_HOME/workspace/$JOB_NAME/'
+	sh 'sshpass -p "Ggn@12345" ssh -o StrictHostKeyChecking=no root@10.127.127.160 mkdir -p $JENKINS_HOME/workspace/$JOB_NAME'
+	sh 'sshpass -p "Ggn@12345" scp -r *ock* root@10.127.127.160:$JENKINS_HOME/workspace/$JOB_NAME/'
 }
 def funDockerCreateImage()
 {
 		echo  "\u2600 **********CREATE DOCKER IMAGE*****************"
 		sh returnStdout: true, script: '/bin/docker build -t dtr.nagarro.com:443/devopssampleapplication:${BUILD_NUMBER} -f $JENKINS_HOME/workspace/$JOB_NAME/Dockerfile .'
-}
+} 
 def funDockerPushImage()
 {
 	echo  "\u2600 **********PUSH DOCKER IMAGE to DTR*****************"
@@ -144,7 +144,7 @@ def fundockercontRun()
 def funseleniumTest()
 {
 	echo  "\u2600 **********SELENIUM TESTING*****************"
-	sh "${MAVEN_HOME}/bin/mvn -f DemoSampleApp_selenium/pom.xml -Dhostname=10.127.127.160  -Dport=8090 -Dcontext=devopssampleapplication -Dmaven.test.failure.ignore=$PERFORMANCE_MAVEN_TEST_RESULT test"
+	sh "${MAVEN_HOME}/bin/mvn -f DemoSampleApp_selenium/pom.xml -Dhostname=10.127.127.160  -Dport=12001 -Dcontext=devopssampleapplication -Dmaven.test.failure.ignore=$PERFORMANCE_MAVEN_TEST_RESULT test"
 	publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: "DemoSampleApp_selenium/target/surefire-reports", reportFiles: "emailable-report.html", reportName: "Selenium Report", reportTitles: ''])
 }
 def funperformanceTest() 
@@ -169,16 +169,13 @@ def funSetupPG()
 def funReleaseEnv()
 {
 	echo  "\u2600 **********DEPLOY RELEASE ENVIRONMENT*****************"
+	sh 'ifconfig'
 	sh 'sshpass -p "Ggn@12345" ssh root@10.127.126.48 rm -rf /tmp/devopssampleapplication.war'
 	sh 'sshpass -p "Ggn@12345" scp $JENKINS_HOME/workspace/$JOB_NAME/target/*.war root@10.127.126.48:/tmp/'
     sh 'sshpass -p "Ggn@12345" ssh root@10.127.126.48 bash -x /opt/deployment-scripts/AutomateDeploy.sh --application_type=tomcat'
 	echo "\u2600 ACCESS RELEASE ENVIRONMENT HERE: http://10.127.126.48:12002/demosampleapplication/ "
 }
-def funSetupELK()
-{
-	echo  "\u2600 **********SETUP ELK STACK*****************"
-	sh 'sshpass -p "Ggn@12345" ssh root@10.127.126.48 sudo python2.7 /opt/scripts/elkautomate.py --logdir /opt/tomcat/logs --action create --logtype tomcat --config_directory /opt/scripts/tomcat --extension .log'
-}
+
 node("Linux_Slave")
 {
 	MAVEN_HOME = tool "Maven3.2.1"
@@ -238,10 +235,8 @@ node("Linux_Slave")
 		funseleniumTest()
 		stage 'Performance Testing  using Jmeter'
 		funperformanceTest()
-		//stage 'Release Deployment'
-		//funReleaseEnv()
-		//stage 'Setup Application Monitoring'
-		//funSetupELK()
+		stage 'Release Deployment'
+		funReleaseEnv()
         stage 'JIRA UPDATION'
         funJiraIssueUpdate()
 	}
@@ -250,6 +245,6 @@ node("Linux_Slave")
         currentBuild.result = 'FAILURE'
         throw any //rethrow exception to prevent the build from proceeding
     } finally {
-        emailext body: '${JELLY_SCRIPT,template="health"}', mimeType: 'text/html', recipientProviders: [[$class: 'RequesterRecipientProvider']], replyTo: 'vipin.choudhary@nagarro.com', subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!', to: 'vipin.choudhary@nagarro.com'
+        emailext body: '${JELLY_SCRIPT,template="health"}', mimeType: 'text/html', recipientProviders: [[$class: 'RequesterRecipientProvider']], replyTo: 'shrey.sangal@nagarro.com', subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!', to: 'vipin.choudhary@nagarro.com'
     }
 }
