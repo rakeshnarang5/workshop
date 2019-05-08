@@ -144,7 +144,7 @@ def fundockercontRun()
 def funseleniumTest()
 {
 	echo  "\u2600 **********SELENIUM TESTING*****************"
-	sh "${MAVEN_HOME}/bin/mvn -f DemoSampleApp_selenium/pom.xml -Dhostname=10.127.126.113  -Dport=8090 -Dcontext=devopssampleapplication -Dmaven.test.failure.ignore=$PERFORMANCE_MAVEN_TEST_RESULT test"
+	sh "${MAVEN_HOME}/bin/mvn -f DemoSampleApp_selenium/pom.xml -Dhostname=10.127.127.160  -Dport=8090 -Dcontext=devopssampleapplication -Dmaven.test.failure.ignore=$PERFORMANCE_MAVEN_TEST_RESULT test"
 	publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: "DemoSampleApp_selenium/target/surefire-reports", reportFiles: "emailable-report.html", reportName: "Selenium Report", reportTitles: ''])
 }
 def funperformanceTest() 
