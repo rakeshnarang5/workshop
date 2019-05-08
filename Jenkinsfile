@@ -160,7 +160,7 @@ def funSetupPG()
 	funDockerContainerStop(7091)
 	funDockerContainerStop(7093)
 	funDockerContainerStop(7000)
-	sh returnStdout: true, script: 'cd dockprom;chmod -R 777 *;/usr/bin/docker-compose down;/usr/bin/docker-compose up -d'
+	sh returnStdout: true, script: 'cd dockprom;chmod -R 777 *;/usr/local/bin/docker-compose down;/usr/local/bin/docker-compose up -d'
 	echo  "\u2600 ACCESS PROMETHEUS ENVIRONMENT HERE: http://10.127.127.160:7090 "
 	echo  "\u2600 ACCESS PUSH GATEWAY ENVIRONMENT HERE: http://10.127.127.160:7091 "
 	echo  "\u2600 ACCESS ALERT MANAGER ENVIRONMENT HERE: http://10.127.127.160:7093 "
