@@ -36,13 +36,13 @@ IMAGE_NAME='tomcat:alpine'
 VOLUMES_STRING='devopssampleapplication.war'
 SELENIUM_POM='DemoSampleApp_selenium'
 SELENIUM_TARGETS='test'
-SELENIUM_HOSTNAME='10.127.126.113'
+SELENIUM_HOSTNAME='10.127.127.160'
 SELENIUM_PORT='8090'
 SELENIUM_CONTEXT='devopssampleapplication'
 PERFORMANCE_MAVEN_TEST_RESULT='$PERFORMANCE_MAVEN_TEST_RESULT'
 PERFORMANCE_POM='DemoSampleApp_Jmeter'
 PERFORMANCE_TARGETS='verify -Pperformance'
-PERFORMANCE_HOSTNAME='10.127.126.113'
+PERFORMANCE_HOSTNAME='10.127.127.160'
 PERFORMANCE_PORT='8090'
 PERFORMANCE_CONTEXT='devopssampleapplication'
 SELENIUM_FILENAME='emailable-report.html'
@@ -108,8 +108,8 @@ def server = Artifactory.server '1508412728@1439723571527'
     rtMaven.run pom: 'pom.xml', goals: 'clean install', buildInfo: buildInfo
     buildInfo.retention maxBuilds: 10, maxDays: 7, deleteBuildArtifacts: true
 	server.publishBuildInfo buildInfo
-	sh 'sshpass -p "Ggn@12345" ssh root@10.127.126.113 mkdir -p $JENKINS_HOME/workspace/$JOB_NAME'
-	sh 'sshpass -p "Ggn@12345"  scp -r *ock* root@10.127.126.113:$JENKINS_HOME/workspace/$JOB_NAME/'
+	sh 'sshpass -p "Ggn@12345" ssh root@10.127.127.160 mkdir -p $JENKINS_HOME/workspace/$JOB_NAME'
+	sh 'sshpass -p "Ggn@12345"  scp -r *ock* root@10.127.127.160:$JENKINS_HOME/workspace/$JOB_NAME/'
 }
 def funDockerCreateImage()
 {
@@ -139,7 +139,7 @@ def fundockercontRun()
 {
 	echo  "\u2600 **********STARTING DOCKER APPLICATION*****************"
 	sh 'docker run --name devopssampleapplication -d -p 12001:8080 dtr.nagarro.com:443/devopssampleapplication:${BUILD_NUMBER}'
-	echo  "\u2600 ACCESS DEV ENVIRONMENT HERE: http://10.127.126.113:12001/devopssampleapplication "
+	echo  "\u2600 ACCESS DEV ENVIRONMENT HERE: http://10.127.127.160:12001/devopssampleapplication "
 }
 def funseleniumTest()
 {
@@ -150,7 +150,7 @@ def funseleniumTest()
 def funperformanceTest() 
 {
 	echo  "\u2600 **********PERFORMANCE TESTING: JMETER*****************"
-	sh "${MAVEN_HOME}/bin/mvn -f DemoSampleApp_Jmeter/pom.xml -Dhostname=10.127.126.113 -Dport=12001 -Dcontext=devopssampleapplication clean verify -Pperformance"
+	sh "${MAVEN_HOME}/bin/mvn -f DemoSampleApp_Jmeter/pom.xml -Dhostname=10.127.127.160 -Dport=12001 -Dcontext=devopssampleapplication clean verify -Pperformance"
 	publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: "DemoSampleApp_Jmeter/target/reports", reportFiles: "index.html", reportName: "PERFORMANCE_REPORTNAME", reportTitles: ''])
 }
 def funSetupPG()
@@ -161,10 +161,10 @@ def funSetupPG()
 	funDockerContainerStop(7093)
 	funDockerContainerStop(7000)
 	sh returnStdout: true, script: 'cd dockprom;chmod -R 777 *;/usr/bin/docker-compose down;/usr/bin/docker-compose up -d'
-	echo  "\u2600 ACCESS PROMETHEUS ENVIRONMENT HERE: http://10.127.126.113:7090 "
-	echo  "\u2600 ACCESS PUSH GATEWAY ENVIRONMENT HERE: http://10.127.126.113:7091 "
-	echo  "\u2600 ACCESS ALERT MANAGER ENVIRONMENT HERE: http://10.127.126.113:7093 "
-	echo  "\u2600 ACCESS GRAFANA ENVIRONMENT HERE: http://10.127.126.113:7000 "
+	echo  "\u2600 ACCESS PROMETHEUS ENVIRONMENT HERE: http://10.127.127.160:7090 "
+	echo  "\u2600 ACCESS PUSH GATEWAY ENVIRONMENT HERE: http://10.127.127.160:7091 "
+	echo  "\u2600 ACCESS ALERT MANAGER ENVIRONMENT HERE: http://10.127.127.160:7093 "
+	echo  "\u2600 ACCESS GRAFANA ENVIRONMENT HERE: http://10.127.127.160:7000 "
 }
 def funReleaseEnv()
 {
