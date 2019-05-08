@@ -235,8 +235,6 @@ node("Linux_Slave")
 		funseleniumTest()
 		stage 'Performance Testing  using Jmeter'
 		funperformanceTest()
-		stage 'Release Deployment'
-		funReleaseEnv()
         stage 'JIRA UPDATION'
         funJiraIssueUpdate()
 	}
