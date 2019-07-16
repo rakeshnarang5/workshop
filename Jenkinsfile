@@ -2,30 +2,26 @@
 
 /*********************************************************************
 ***** Description :: This template is used to setup Pipeline *****
-* *** Author :: Ravindra Mittal ( ravindra.mittal@nagarro.com) *******
-***** Date        :: 08/23/2017                                  *****
+* *** Author :: Anupam Agarwal ( anupam.agarwal@nagarro.com) *******
+***** Date        :: 07/10/2017                                  *****
 ***** Revision    :: 1.0                                       *****
 **********************************************************************/  
 
-LABEL_EXPR='Linux_Slave'
 JAVA_HOME='JDK_1.8'
-MAVEN_PATH='Maven3.2.1'
+MAVEN_PATH='Maven3.6.1'
+MAVEN_HOME='/opt/apache-maven-3.6.1/bin'
 ANT_PATH='ant'
-GIT_CREDS_ID=''
+GIT_CREDS_ID='0f7aa54e-0259-438b-a1dd-3e0d686c0680'
 GIT_REPO=''
 GIT_BRANCH=''
+GIT_URL='https://github.com/anupam0611/anu-deployment.git'
 COMMAND='install'
 SONAR_BRANCH='master'
-SONAR_URL='http://10.127.128.32:9000'
 DEFAULT_RECIPIENTS='dsc.admin@nagarro.com'
-SVN_REPO='http://svn.nagarro.local:8080/svn/DevOps/codebase/sampleprojects/java/branches/launchstation_java_pipeline'
-SVN_CREDS_ID='dsc-admin'
-SCM='SVN'
+SCM='GIT'
 BUILDTOOL='MVN'
 TARGET='main'
 COMMENT='Pipeline has been successfully executed'
-ISSUE_ID='DEVOC-322'
-JIRA_SITE='jira-nagarro'
 SONAR_INTEGRATION ='sonar_linux_slave' 
 ARTIFACTORY_NAME='1508412728@1439723571527'
 ARTIFACTORY_REPO='CI-Automation-JAVA-Pipeline'
@@ -54,40 +50,25 @@ PORT = '8090'
 def  funCodeCheckoutGit()
 { 
  echo  "\u2600 **********GIT Code Checkout Stage Begins*******"
-checkout([$class: 'GitSCM', branches: [[name: "*/"]], doGenerateSubmoduleConfigurations: false, extensions: [], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[credentialsId: "", url: "$GIT_URL"]]])
+checkout([$class: 'GitSCM', branches: [[name: "launchstation_java_pipeline"]], doGenerateSubmoduleConfigurations: false, extensions: [], gitTool: 'Default', submoduleCfg: [], userRemoteConfigs: [[credentialsId: "$GIT_CREDS_ID", url: "$GIT_URL"]]])
 } 
-
-def  funCodeCheckoutSvn()
-{
- echo  "\u2600 **********SVN Code Checkout Stage Begins*******"
-checkout([$class: 'SubversionSCM', additionalCredentials: [], excludedCommitMessages: '', excludedRegions: '', excludedRevprop: '', excludedUsers: '', filterChangelog: false, ignoreDirPropChanges: false, includedRegions: '', locations: [[credentialsId: "dsc-admin", depthOption: 'infinity', ignoreExternalsOption: true, local: '.', remote: "http://svn.nagarro.local:8080/svn/DevOps/codebase/sampleprojects/java/branches/launchstation_java_pipeline"]], workspaceUpdater: [$class: 'UpdateUpdater']])
-}
 
 def fununitTestMvn()
 {
  echo  "\u2600 **********Running Unit test cases******************"
-sh "${MAVEN_HOME}/bin/mvn test"
+sh "${MAVEN_HOME}/mvn test"
 }
 
 def funCodeBuildMvn()
 { 
  echo  "\u2600 **********Build started******************" 
-sh "${MAVEN_HOME}/bin/mvn install"
+sh "${MAVEN_HOME}/mvn install"
 stash includes: 'target/*.war', name: 'warfile'
 } 
-
-def funCodeBuildAnt()
-{
- echo  "\u2600 **********Build started******************" 
-sh "${ANT_HOME}/bin/ant main" 
-}
 
 def funSonarAnalysisMVN()
 { 
  echo  "\u2600 **********Sonar analysis started*****************" 
-withSonarQubeEnv("sonar_linux_slave") {
-     sh "${MAVEN_HOME}/bin/mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.2:sonar"
-    }
 } 
 def funJiraIssueUpdate()
 {
@@ -98,29 +79,25 @@ jiraComment body: "Pipeline has been successfully executed", issueKey: "DEVOC-32
 def funartifactoryUpload()
 {
 echo  "\u2600 **********Uploading to artifactory*****************" 
-def server = Artifactory.server '1508412728@1439723571527'
-     def buildInfo = Artifactory.newBuildInfo()
-      buildInfo.env.capture = true
-      buildInfo.env.collect()
-      def rtMaven = Artifactory.newMavenBuild()
-      rtMaven.tool = 'Maven3.2.1'
-      rtMaven.deployer releaseRepo:'CI-Automation-JAVA-Pipeline', snapshotRepo:'CI-Automation-JAVA-Pipeline', server: server
-    rtMaven.run pom: 'pom.xml', goals: 'clean install', buildInfo: buildInfo
-    buildInfo.retention maxBuilds: 10, maxDays: 7, deleteBuildArtifacts: true
-	server.publishBuildInfo buildInfo
-	sh 'sshpass -p "Ggn@12345" ssh -o StrictHostKeyChecking=no root@10.127.127.160 mkdir -p $JENKINS_HOME/workspace/$JOB_NAME'
-	sh 'sshpass -p "Ggn@12345" scp -r *ock* root@10.127.127.160:$JENKINS_HOME/workspace/$JOB_NAME/'
 }
+
 def funDockerCreateImage()
 {
 		echo  "\u2600 **********CREATE DOCKER IMAGE*****************"
-		sh returnStdout: true, script: '/bin/docker build -t dtr.nagarro.com:443/devopssampleapplication:${BUILD_NUMBER} -f $JENKINS_HOME/workspace/$JOB_NAME/Dockerfile .'
+		sh 'sudo cp -p /var/lib/jenkins/.m2/repository/com/nagarro/devops-tools/devops/demosampleapplication/1.0.0-SNAPSHOT/demosampleapplication-1.0.0-SNAPSHOT.war $WORKSPACE/'
+		sh returnStdout: true, script: '/bin/docker build -t anupam0611/anu-deployment:devopssampleapplication_${BUILD_NUMBER} -f $JENKINS_HOME/workspace/$JOB_NAME/Dockerfile .'
 } 
 def funDockerPushImage()
 {
+withCredentials([usernamePassword(credentialsId: 'DOCKER', passwordVariable: 'pass', usernameVariable: 'user')])
+{
 	echo  "\u2600 **********PUSH DOCKER IMAGE to DTR*****************"
-	sh returnStdout: true, script: '/bin/docker push dtr.nagarro.com:443/devopssampleapplication:${BUILD_NUMBER}'
+	sh """docker login -u='$user' -p='$pass' """
+    sh returnStdout: true, script: '/bin/docker push anupam0611/anu-deployment:devopssampleapplication_${BUILD_NUMBER}'
+	}
+	
 }
+
 def funDockerContainerStop(int p)
 {
     echo  "\u2600 **********VERIFY IF RUNNING INSTANCE EXIST*****************"
@@ -138,20 +115,8 @@ def funDockerContainerStop(int p)
 def fundockercontRun()
 {
 	echo  "\u2600 **********STARTING DOCKER APPLICATION*****************"
-	sh 'docker run --name devopssampleapplication -d -p 12001:8080 dtr.nagarro.com:443/devopssampleapplication:${BUILD_NUMBER}'
-	echo  "\u2600 ACCESS DEV ENVIRONMENT HERE: http://10.127.127.160:12001/devopssampleapplication "
-}
-def funseleniumTest()
-{
-	echo  "\u2600 **********SELENIUM TESTING*****************"
-	sh "${MAVEN_HOME}/bin/mvn -f DemoSampleApp_selenium/pom.xml -Dhostname=10.127.127.160  -Dport=12001 -Dcontext=devopssampleapplication -Dmaven.test.failure.ignore=$PERFORMANCE_MAVEN_TEST_RESULT test"
-	publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: "DemoSampleApp_selenium/target/surefire-reports", reportFiles: "emailable-report.html", reportName: "Selenium Report", reportTitles: ''])
-}
-def funperformanceTest() 
-{
-	echo  "\u2600 **********PERFORMANCE TESTING: JMETER*****************"
-	sh "${MAVEN_HOME}/bin/mvn -f DemoSampleApp_Jmeter/pom.xml -Dhostname=10.127.127.160 -Dport=12001 -Dcontext=devopssampleapplication clean verify -Pperformance"
-	publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: "DemoSampleApp_Jmeter/target/reports", reportFiles: "index.html", reportName: "PERFORMANCE_REPORTNAME", reportTitles: ''])
+	sh 'sudo docker run --name devopssampleapplication -d -p 12001:8080 anupam0611/anu-deployment:devopssampleapplication_${BUILD_NUMBER}'
+	echo  "\u2600 ACCESS DEV ENVIRONMENT HERE: http://18.234.125.212:12001/demosampleapplication-1.0.0-SNAPSHOT "
 }
 def funSetupPG()
 {
@@ -160,89 +125,43 @@ def funSetupPG()
 	funDockerContainerStop(7091)
 	funDockerContainerStop(7093)
 	funDockerContainerStop(7000)
-	sh returnStdout: true, script: 'cd dockprom;chmod -R 777 *;/usr/local/bin/docker-compose down;/usr/local/bin/docker-compose up -d'
-	echo  "\u2600 ACCESS PROMETHEUS ENVIRONMENT HERE: http://10.127.127.160:7090 "
-	echo  "\u2600 ACCESS PUSH GATEWAY ENVIRONMENT HERE: http://10.127.127.160:7091 "
-	echo  "\u2600 ACCESS ALERT MANAGER ENVIRONMENT HERE: http://10.127.127.160:7093 "
-	echo  "\u2600 ACCESS GRAFANA ENVIRONMENT HERE: http://10.127.127.160:7000 "
+	sh returnStdout: true, script: 'cd $WORKSPACE/dockprom;sudo chmod -R 777 *;sudo /usr/local/bin/docker-compose down;sudo /usr/local/bin/docker-compose up -d'
+	echo  "\u2600 ACCESS PROMETHEUS ENVIRONMENT HERE: http://18.234.125.212:7090 "
+	echo  "\u2600 ACCESS PUSH GATEWAY ENVIRONMENT HERE: http://18.234.125.212:7091 "
+	echo  "\u2600 ACCESS ALERT MANAGER ENVIRONMENT HERE: http://18.234.125.212:7093 "
+	echo  "\u2600 ACCESS GRAFANA ENVIRONMENT HERE: http://18.234.125.212:7000 "
 }
-def funReleaseEnv()
+def funseleniumTest()
 {
-	echo  "\u2600 **********DEPLOY RELEASE ENVIRONMENT*****************"
-	sh 'ifconfig'
-	sh 'sshpass -p "Ggn@12345" ssh root@10.127.126.48 rm -rf /tmp/devopssampleapplication.war'
-	sh 'sshpass -p "Ggn@12345" scp $JENKINS_HOME/workspace/$JOB_NAME/target/*.war root@10.127.126.48:/tmp/'
-    sh 'sshpass -p "Ggn@12345" ssh root@10.127.126.48 bash -x /opt/deployment-scripts/AutomateDeploy.sh --application_type=tomcat'
-	echo "\u2600 ACCESS RELEASE ENVIRONMENT HERE: http://10.127.126.48:12002/demosampleapplication/ "
+	echo  "\u2600 **********SELENIUM TESTING*****************"
 }
-
-node("Linux_Slave")
+def funperformanceTest() 
 {
-	MAVEN_HOME = tool "Maven3.2.1"
-	ANT_HOME = tool "ant"
-	env.PATH = "${env.JAVA_HOME}/bin:${env.MAVEN_HOME}/bin:${env.ANT_HOME}/bin:${env.PATH}"
-	try 
-	{
-		stage 'Checkout'
-		if (SCM == 'SVN')
-		{
-			funCodeCheckoutSvn()
-		}
-		stage 'Build'
-		if (BUILDTOOL == 'MVN')
-		{
-			funCodeBuildMvn()
-		}
-		stage 'Unit Test'
-		if (BUILDTOOL == 'MVN')
-		{
-			fununitTestMvn()
-		}
-		stage 'Sonar Analysis'
-		if (BUILDTOOL == 'MVN')
-        {
-			funSonarAnalysisMVN()
-        }
-        stage 'Upload to Artifactory'
-			funartifactoryUpload()
-    }
-    catch (any)
-    {
-		currentBuild.result = 'FAILURE'
-		throw any //rethrow exception to prevent the build from proceeding
-    }
+	echo  "\u2600 **********PERFORMANCE TESTING: JMETER*****************"
 }
-node("Devops_POC_Linux")
+node("test")
 {
-	stage 'Docker Image'
-	funDockerCreateImage()
-	stage 'Push to DTR'
-	funDockerPushImage()
-	stage 'Docker Deployment'
-	funDockerContainerStop (12001)
-	fundockercontRun()
-	stage 'Setup Infrastructure Monitoring'
-	funSetupPG()
-}
-node("Linux_Slave")
-{
-	MAVEN_HOME = tool "Maven3.2.1"
-	ANT_HOME = tool "ant"
-	env.PATH = "${env.JAVA_HOME}/bin:${env.MAVEN_HOME}/bin:${env.ANT_HOME}/bin:${env.PATH}"
-	try 
-	{
-		stage 'Function Testing using Selenium'
-		funseleniumTest()
-		stage 'Performance Testing  using Jmeter'
-		funperformanceTest()
-        stage 'JIRA UPDATION'
-        funJiraIssueUpdate()
-	}
-	catch (any) 
-	{
-        currentBuild.result = 'FAILURE'
-        throw any //rethrow exception to prevent the build from proceeding
-    } finally {
-        emailext body: '${JELLY_SCRIPT,template="health"}', mimeType: 'text/html', recipientProviders: [[$class: 'RequesterRecipientProvider']], replyTo: 'shrey.sangal@nagarro.com', subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!', to: 'vipin.choudhary@nagarro.com'
-    }
+stage 'GITCHEKOUT'
+funCodeCheckoutGit()
+stage 'MvnTest'
+fununitTestMvn()
+stage 'MvnBuild'
+funCodeBuildMvn()
+stage 'SonarAnalysis'
+funSonarAnalysisMVN()
+stage 'ArtifactoryUpload'
+funartifactoryUpload()
+stage 'CreateImage'
+funDockerCreateImage()
+stage 'Push to DockerHUb'
+funDockerPushImage()
+stage 'Docker Deployment'
+funDockerContainerStop (12001)
+fundockercontRun()
+stage 'Monitoring'
+funSetupPG()
+stage 'Selenium Testing'
+funseleniumTest()
+stage 'Performance Test'
+funperformanceTest()
 }
