@@ -7,14 +7,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
+/**
+ * @author rakeshnarang
+ *
+ */
 @Controller
 @RequestMapping(value = "/")
 public class FrontController{
 	
+	/**
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value = "", method = RequestMethod.GET)
 	public ModelAndView getHomeView(HttpServletRequest request) {
-		ModelAndView model = new ModelAndView("home");
-		return model;
+		return new ModelAndView("home");
 	}
 
 }
